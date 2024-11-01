@@ -11,7 +11,7 @@ import Grafico from './components/Grafico';
 import bebendo from './assets/bebendo.gif';
 import comendo from './assets/comendo.gif';
 import seco from './assets/seco.png';
-import biscoito from './assets/biscoito.png';
+import biscoito from './assets/biscoito.gif';
 
 const AppRouter: React.FC = () => {
   return (

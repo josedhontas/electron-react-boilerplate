@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { 
   Container, TextField, Box, Typography, Button, MenuItem, InputAdornment 
 } from '@mui/material';
@@ -28,22 +28,23 @@ const diseasesList: string[] = [
 
 // Interface para os dados do paciente
 interface PatientData {
-  name: string;
-  age: string;
-  disease: string;
-  comments: string;
+  nome: string;
+  dataNascimento: string;
+  doenca: string;
+  comentarios: string;
 }
 
 const Paciente: React.FC = () => {
   const navigate = useNavigate();
-
-  // Estado para armazenar os dados do paciente
   const [patientData, setPatientData] = useState<PatientData>({
-    name: '',
-    age: '',
-    disease: '',
-    comments: '',
+    nome: '',
+    dataNascimento: '',
+    doenca: '',
+    comentarios: '',
   });
+
+  // Criação do socket
+  const socket = new WebSocket('ws://localhost:8080'); // Altere a URL conforme necessário
 
   // Manipulador de eventos para alterar os valores dos campos de texto
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -58,12 +59,32 @@ const Paciente: React.FC = () => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     console.log(patientData); // Lógica para enviar os dados do paciente
+
+    // Envia os dados do paciente através do socket
+    socket.send(JSON.stringify({ action: 'set-paciente-data', ...patientData }));
+    console.log('Dados do paciente enviados para o socket:', patientData);
+    navigate('/inicio'); // Navega para a rota /inicio após o envio
   };
 
-  // Navega para a rota /inicio
-  const handleStart = () => {
-    navigate('/inicio');
-  };
+  // Conecta o socket e trata eventos
+  useEffect(() => {
+    socket.onopen = () => {
+      console.log('Conectado ao servidor WebSocket');
+    };
+
+    socket.onmessage = (event) => {
+      console.log('Mensagem recebida do servidor:', event.data);
+    };
+
+    socket.onclose = () => {
+      console.log('Conexão WebSocket fechada');
+    };
+
+    // Limpeza ao desmontar o componente
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   return (
     <Container maxWidth="sm" sx={containerStyle}>
@@ -78,8 +99,8 @@ const Paciente: React.FC = () => {
         <TextField
           fullWidth
           label="Nome"
-          name="name"
-          value={patientData.name}
+          name="nome"
+          value={patientData.nome}
           onChange={handleChange}
           margin="normal"
           sx={textStyle}
@@ -95,20 +116,12 @@ const Paciente: React.FC = () => {
 
         <TextField
           fullWidth
-          label="Idade"
-          name="age"
-          value={patientData.age}
+          name="dataNascimento"
+          value={patientData.dataNascimento}
           onChange={handleChange}
           margin="normal"
           sx={textStyle}
-          type="number"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <CalendarTodayIcon />
-              </InputAdornment>
-            ),
-          }}
+          type="date"
           required
         />
 
@@ -116,8 +129,8 @@ const Paciente: React.FC = () => {
           fullWidth
           select
           label="Doenças"
-          name="disease"
-          value={patientData.disease}
+          name="doenca"
+          value={patientData.doenca}
           onChange={handleChange}
           margin="normal"
           sx={textStyle}
@@ -130,9 +143,9 @@ const Paciente: React.FC = () => {
           }}
           required
         >
-          {diseasesList.map((disease) => (
-            <MenuItem key={disease} value={disease}>
-              {disease}
+          {diseasesList.map((doenca) => (
+            <MenuItem key={doenca} value={doenca}>
+              {doenca}
             </MenuItem>
           ))}
         </TextField>
@@ -140,8 +153,8 @@ const Paciente: React.FC = () => {
         <TextField
           fullWidth
           label="Comentários"
-          name="comments"
-          value={patientData.comments}
+          name="comentarios"
+          value={patientData.comentarios}
           onChange={handleChange}
           margin="normal"
           multiline
@@ -154,7 +167,6 @@ const Paciente: React.FC = () => {
             type="submit"
             fullWidth
             sx={buttonPrimaryStyle}
-            onClick={handleStart}
           >
             Enviar
           </Button>

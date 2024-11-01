@@ -19,20 +19,19 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 let exeProcess: ChildProcessWithoutNullStreams | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
-
 // Adiciona handler IPC para disponibilizar o CSV para o frontend
 const csvFilePath = app.isPackaged
   ? path.join(process.resourcesPath, 'python', 'dados_sensores.csv')
   : path.join(__dirname, '../../python/dados_sensores.csv');
 
+const jsonFilePath = app.isPackaged
+  ? path.join(process.resourcesPath, 'python', 'dados_paciente.json')
+  : path.join(__dirname, '../../python/dados_paciente.json');
+
+// Leitura do CSV e JSON de forma assíncrona
 ipcMain.handle('get-csv-data', async () => {
   try {
-    const data = fs.readFileSync(csvFilePath, 'utf-8');
+    const data = await fs.promises.readFile(csvFilePath, 'utf-8');
     return data;
   } catch (error) {
     console.error("Erro ao ler o arquivo CSV:", error);
@@ -40,13 +39,28 @@ ipcMain.handle('get-csv-data', async () => {
   }
 });
 
-// Adiciona um watcher para monitorar alterações no arquivo CSV
-const watcher = chokidar.watch(csvFilePath);
+ipcMain.handle('get-json-data', async () => {
+  try {
+    const data = await fs.promises.readFile(jsonFilePath, 'utf-8');
+    return data;
+  } catch (error) {
+    console.error("Erro ao ler o arquivo JSON:", error);
+    throw error;
+  }
+});
 
-watcher.on('change', (path) => {
+// Watchers para monitorar alterações no CSV e JSON
+const watcherCsv = chokidar.watch(csvFilePath);
+const watcherJson = chokidar.watch(jsonFilePath);
+
+watcherCsv.on('change', (path) => {
   console.log(`Arquivo ${path} foi modificado.`);
-  // Emite um evento para o front-end quando o CSV for atualizado
   mainWindow?.webContents.send('csv-updated');
+});
+
+watcherJson.on('change', (path) => {
+  console.log(`Arquivo ${path} foi modificado.`);
+  mainWindow?.webContents.send('json-updated');
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -146,10 +160,19 @@ const createWindow = async () => {
  * Eventos do app
  */
 app.on('window-all-closed', () => {
+  if (exeProcess) {
+    exeProcess.kill();  // Encerra o processo .exe se ainda estiver em execução
+    exeProcess = null;   // Limpa a referência ao processo
+  }
   if (process.platform !== 'darwin') {
     app.quit();
   }
-  if (exeProcess) exeProcess.kill();
+});
+
+app.on('before-quit', () => {
+  if (exeProcess) {
+    exeProcess.kill();  // Garante que o .exe será encerrado antes do app sair
+  }
 });
 
 app

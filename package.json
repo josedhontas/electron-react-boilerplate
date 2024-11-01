@@ -193,7 +193,9 @@
       "node_modules",
       "package.json",
       "src/renderer/services/main.exe",
-      "src/files/dados_sensores.csv"
+      "src/files/dados_sensores.csv",
+      "src/files/dados_paciente.json"
+
     ],
     "mac": {
       "sign": ".erb/scripts/notarize.js",
