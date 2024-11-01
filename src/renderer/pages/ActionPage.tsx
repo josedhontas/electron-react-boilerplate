@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import { 
-  containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle 
+  containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle, buttonTertiaryStyle 
 } from '../styles/globalStyles';
 
 // Definição dos tipos das props
@@ -140,7 +140,7 @@ const ActionPage: FC<ActionPageProps> = ({
       <Box display="flex" justifyContent="space-between" mt={4}>
         <Button
           variant="contained"
-          sx={buttonPrimaryStyle}
+          sx={buttonTertiaryStyle}
           onClick={handleBack}
           disabled={isRunning}
         >

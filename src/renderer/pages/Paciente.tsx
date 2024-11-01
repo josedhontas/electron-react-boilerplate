@@ -8,7 +8,8 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import CommentIcon from '@mui/icons-material/Comment';
 import { useNavigate } from 'react-router-dom';
 import { 
-  containerStyle, titleStyle, textStyle, buttonPrimaryStyle 
+  containerStyle, titleStyle, textStyle, buttonPrimaryStyle, buttonTertiaryStyle, 
+  buttonSecondaryStyle
 } from '../styles/globalStyles';
 
 // Lista de doenças
@@ -86,6 +87,11 @@ const Paciente: React.FC = () => {
     };
   }, []);
 
+  // Função para voltar para a página anterior
+  const handleBack = () => {
+    navigate(-1); // Volta para a página anterior
+  };
+
   return (
     <Container maxWidth="sm" sx={containerStyle}>
       <Box mb={4} display="flex" alignItems="center" justifyContent="center">
@@ -162,13 +168,20 @@ const Paciente: React.FC = () => {
           sx={textStyle}
         />
 
-        <Box mt={3}>
+        <Box display="flex" justifyContent="space-between" mt={3}>
+          <Button
+            variant="contained"
+            sx={buttonTertiaryStyle}
+            onClick={handleBack}
+          >
+            Voltar
+          </Button>
           <Button
             type="submit"
-            fullWidth
-            sx={buttonPrimaryStyle}
+            variant="contained"
+            sx={buttonSecondaryStyle}
           >
-            Enviar
+            Prosseguir
           </Button>
         </Box>
       </Box>
