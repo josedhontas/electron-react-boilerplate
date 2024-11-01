@@ -6,6 +6,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import { 
   containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle, buttonTertiaryStyle 
 } from '../styles/globalStyles';
+import '../styles/style.css';
 
 // Definição dos tipos das props
 interface ActionPageProps {

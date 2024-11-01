@@ -1,0 +1,68 @@
+body {
+    background-color: #E3F2FD; /* Azul claro */
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .button-primary {
+    background-color: #FF6B6B;
+    color: #FFF;
+    font-size: 1.3rem;
+    font-family: 'Arial', sans-serif;
+    border-radius: 30px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px 24px;
+    transition: transform 0.3s ease-in-out, background-color 0.2s;
+    cursor: pointer;
+  }
+  
+  .button-primary:hover {
+    background-color: #FF7F7F;
+    transform: scale(1.05);
+  }
+  
+  .button-primary:active {
+    transform: scale(0.97);
+  }
+  
+  .button-secondary {
+    background-color: #28A745;
+    color: #FFF;
+    font-size: 1.2rem;
+    font-family: 'Arial', sans-serif;
+    border-radius: 30px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+    padding: 10px 20px;
+    transition: transform 0.3s ease-in-out, background-color 0.2s;
+    cursor: pointer;
+  }
+  
+  .button-secondary:hover {
+    background-color: #4CAF50;
+    transform: scale(1.05);
+  }
+  
+  .button-secondary:active {
+    transform: scale(0.97);
+  }
+  
+  .button-tertiary {
+    background-color: #6C757D;
+    color: #FFF;
+    font-size: 1.1rem;
+    font-family: 'Arial', sans-serif;
+    border-radius: 30px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 8px 16px;
+    transition: transform 0.3s ease-in-out, background-color 0.2s;
+    cursor: pointer;
+  }
+  
+  .button-tertiary:hover {
+    background-color: #868E96;
+    transform: scale(1.05);
+  }
+  
+  .button-tertiary:active {
+    transform: scale(0.97);
+  }
