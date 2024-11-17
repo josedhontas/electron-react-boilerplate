@@ -37,7 +37,7 @@ const ActionPage: FC<ActionPageProps> = ({
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState<boolean>(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState<boolean>(true);
-  const wsRef = useRef<WebSocket | null>(null); // WebSocket com tipo
+  const wsRef = useRef<WebSocket | null>(null);
 
   const handleToggle = () => {
     setIsRunning((prev) => !prev);
@@ -62,8 +62,12 @@ const ActionPage: FC<ActionPageProps> = ({
       console.log('Conexão WebSocket fechada');
     };
 
+    wsRef.current.onerror = (error) => {
+      console.error('Erro na conexão WebSocket:', error);
+    };
+
     return () => {
-      wsRef.current?.close();
+      wsRef.current?.readyState === WebSocket.OPEN && wsRef.current.close();
     };
   }, []);
 
@@ -86,7 +90,26 @@ const ActionPage: FC<ActionPageProps> = ({
   }, [isRunning, timer]);
 
   const handleBack = () => navigate(backRoute);
+
   const handleNext = () => {
+    if (nextRoute === '/grafico') {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: 'enviar-dados' }));
+      } else {
+        wsRef.current = new WebSocket('ws://localhost:8080');
+        wsRef.current.onopen = () => {
+          console.log('Conexão WebSocket aberta para /grafico');
+          wsRef.current?.send(JSON.stringify({ action: 'enviar-dados' }));
+        };
+        wsRef.current.onclose = () => {
+          console.log('Conexão WebSocket fechada após enviar dados para /grafico');
+        };
+        wsRef.current.onerror = (error) => {
+          console.error('Erro ao conectar ao WebSocket:', error);
+        };
+      }
+    }
+
     setIsAnimatingOut(true);
     setTimeout(() => navigate(nextRoute), 300);
   };

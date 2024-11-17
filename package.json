@@ -184,8 +184,8 @@
     "webpack-merge": "^5.9.0"
   },
   "build": {
-    "productName": "ProjetoHU",
-    "appId": "org.erb.ProjetoHU",
+    "productName": "DeglutAI",
+    "appId": "org.erb.DeglutAI ",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [

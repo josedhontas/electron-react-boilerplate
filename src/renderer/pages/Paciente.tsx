@@ -8,8 +8,7 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import CommentIcon from '@mui/icons-material/Comment';
 import { useNavigate } from 'react-router-dom';
 import { 
-  containerStyle, titleStyle, textStyle, buttonPrimaryStyle, buttonTertiaryStyle, 
-  buttonSecondaryStyle
+  containerStyle, titleStyle, textStyle, buttonTertiaryStyle, buttonSecondaryStyle 
 } from '../styles/globalStyles';
 
 // Lista de doenças
@@ -24,14 +23,15 @@ const diseasesList: string[] = [
   'Refluxo Gastroesofágico (DRGE)',
   'Câncer de Cabeça e Pescoço',
   'Esclerose Lateral Amiotrófica (ELA)',
+  'Nenhum',
   'Outros',
 ];
 
-// Interface para os dados do paciente
 interface PatientData {
   nome: string;
   dataNascimento: string;
   doenca: string;
+  doencaEspecifica?: string; // Campo adicional
   comentarios: string;
 }
 
@@ -44,10 +44,8 @@ const Paciente: React.FC = () => {
     comentarios: '',
   });
 
-  // Criação do socket
-  const socket = new WebSocket('ws://localhost:8080'); // Altere a URL conforme necessário
+  const socket = new WebSocket('ws://localhost:8080');
 
-  // Manipulador de eventos para alterar os valores dos campos de texto
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setPatientData((prevData) => ({
@@ -56,41 +54,29 @@ const Paciente: React.FC = () => {
     }));
   };
 
-  // Manipulador de envio do formulário
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log(patientData); // Lógica para enviar os dados do paciente
+    const dataToSend = {
+      ...patientData,
+      doenca: patientData.doenca === 'Outros' && patientData.doencaEspecifica 
+        ? patientData.doencaEspecifica 
+        : patientData.doenca,
+    };
 
-    // Envia os dados do paciente através do socket
-    socket.send(JSON.stringify({ action: 'set-paciente-data', ...patientData }));
-    console.log('Dados do paciente enviados para o socket:', patientData);
-    navigate('/inicio'); // Navega para a rota /inicio após o envio
+    console.log(dataToSend);
+    socket.send(JSON.stringify({ action: 'set-paciente-data', ...dataToSend }));
+    navigate('/inicio');
   };
 
-  // Conecta o socket e trata eventos
   useEffect(() => {
-    socket.onopen = () => {
-      console.log('Conectado ao servidor WebSocket');
-    };
+    socket.onopen = () => console.log('Conectado ao servidor WebSocket');
+    socket.onmessage = (event) => console.log('Mensagem recebida do servidor:', event.data);
+    socket.onclose = () => console.log('Conexão WebSocket fechada');
 
-    socket.onmessage = (event) => {
-      console.log('Mensagem recebida do servidor:', event.data);
-    };
-
-    socket.onclose = () => {
-      console.log('Conexão WebSocket fechada');
-    };
-
-    // Limpeza ao desmontar o componente
-    return () => {
-      socket.close();
-    };
+    return () => socket.close();
   }, []);
 
-  // Função para voltar para a página anterior
-  const handleBack = () => {
-    navigate(-1); // Volta para a página anterior
-  };
+  const handleBack = () => navigate(-1);
 
   return (
     <Container maxWidth="sm" sx={containerStyle}>
@@ -155,6 +141,19 @@ const Paciente: React.FC = () => {
             </MenuItem>
           ))}
         </TextField>
+
+        {patientData.doenca === 'Outros' && (
+          <TextField
+            fullWidth
+            label="Especifique a doença"
+            name="doencaEspecifica"
+            value={patientData.doencaEspecifica || ''}
+            onChange={handleChange}
+            margin="normal"
+            sx={textStyle}
+            required
+          />
+        )}
 
         <TextField
           fullWidth
