@@ -194,7 +194,9 @@
       "package.json",
       "src/renderer/services/main.exe",
       "src/files/dados_sensores.csv",
-      "src/files/dados_paciente.json"
+      "src/files/dados_paciente.json",
+      "src/files/dados_sensores.json"
+
 
     ],
     "mac": {

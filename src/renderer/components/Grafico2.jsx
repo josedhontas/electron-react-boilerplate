@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Label 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, Label
 } from 'recharts';
-import { 
-  Box, Container, Grid, Typography, Switch, Button 
+import {
+  Box, Container, Grid, Typography, Button, Switch
 } from '@mui/material';
-import { 
-  containerStyle, titleStyle 
-} from '../styles/globalStyles';
+import { containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle } from '../styles/globalStyles';
 import { useNavigate } from 'react-router-dom';
 
-const MAX_DATA_POINTS = 20;
-
-// Estrutura dos dados esperados
 interface DataPoint {
   tempo: number;
   ax: number;
@@ -22,18 +17,68 @@ interface DataPoint {
   acao: string;
 }
 
+const MAX_DATA_POINTS = 20;
+
 const Grafico: React.FC = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<DataPoint[]>([]);
   const [realTime, setRealTime] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [ws, setWs] = useState<WebSocket | undefined>(undefined);
 
   useEffect(() => {
-    let ws: WebSocket | undefined;
-    if (realTime) {
-      ws = new WebSocket('ws://localhost:8080');
-      ws.onmessage = (event) => {
+    // Sempre que o realTime mudar, podemos reiniciar a conexão WebSocket se necessário.
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [ws]);
+
+  const handleToggle = () => {
+    setRealTime(!realTime);
+    setData([]);
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const csvData = await window.electron.ipcRenderer.invoke('get-csv-data');
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'dados_sensores.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erro ao baixar o arquivo CSV:', error);
+      setError('Erro ao baixar o arquivo CSV.');
+    }
+  };
+
+  const handleBack = () => navigate("/"); 
+  const backText = "Voltar"; 
+
+  const handleSendMessage = () => {
+    if (!ws) {
+      // Cria o WebSocket se não estiver aberto
+      const newWs = new WebSocket('ws://localhost:8080');
+      setWs(newWs);
+
+      newWs.onopen = () => {
+        console.log('WebSocket aberto');
+        // Envia a mensagem "enviar-dados" após o WebSocket ser aberto
+        newWs.send(JSON.stringify({ action: 'enviar-dados' }));
+        console.log('Mensagem "enviar-dados" enviada');
+        
+        // Fecha a conexão WebSocket após o envio
+        newWs.close();
+        console.log('Conexão WebSocket fechada após envio');
+      };
+
+      newWs.onmessage = (event) => {
         const messageData = JSON.parse(event.data);
         const newData: DataPoint = {
           tempo: messageData.tempo,
@@ -42,32 +87,36 @@ const Grafico: React.FC = () => {
           az: messageData.az,
           acao: messageData.acao,
         };
-
-        console.log("Dados recebidos:", newData);
-
         setData((prevData) => {
           const updatedData = [...prevData, newData];
           return updatedData.length > MAX_DATA_POINTS 
             ? updatedData.slice(-MAX_DATA_POINTS) 
             : updatedData;
         });
-
-        setLoading(false); // Define loading como false ao receber os dados
       };
-      
-      ws.onclose = () => console.log('Conexão WebSocket fechada.');
+
+      newWs.onerror = () => {
+        console.error('Erro na conexão WebSocket.');
+        setError('Erro ao conectar com o WebSocket.');
+      };
+
+      newWs.onclose = () => {
+        console.log('Conexão WebSocket fechada.');
+      };
+    } else {
+      // Se já houver um WebSocket aberto, envia a mensagem diretamente
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'enviar-dados' }));
+        console.log('Mensagem "enviar-dados" enviada');
+        
+        // Fecha a conexão WebSocket após o envio
+        ws.close();
+        console.log('Conexão WebSocket fechada após envio');
+      } else {
+        console.error('WebSocket não está aberto');
+        setError('Erro: WebSocket não está aberto.');
+      }
     }
-    
-    return () => ws && ws.close();
-  }, [realTime]);
-
-  const handleToggle = () => {
-    setRealTime(!realTime);
-    setData([]); // Limpa os dados ao alternar para tempo real
-  };
-
-  const goToHome = () => {
-    navigate('/');
   };
 
   return (
@@ -78,20 +127,16 @@ const Grafico: React.FC = () => {
             Gráfico em Tempo Real
           </Typography>
 
-          <Button 
-            variant="contained" 
-            onClick={goToHome} 
-            style={{ marginTop: '20px', marginBottom: '20px' }}
-          >
-            Voltar para o Início
-          </Button>
-
           <Box mt={2} mb={3}>
             <Typography variant="subtitle1">Dados em Tempo Real</Typography>
             <Switch checked={realTime} onChange={handleToggle} />
           </Box>
 
-          {error ? (
+          {loading ? (
+            <Typography variant="h6" color="textSecondary">
+              Carregando dados...
+            </Typography>
+          ) : error ? (
             <Typography variant="h6" color="error">
               {error}
             </Typography>
@@ -116,6 +161,30 @@ const Grafico: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           )}
+
+          <Box display="flex" justifyContent="space-between" mt={4}>
+            <Button
+              variant="contained"
+              sx={buttonPrimaryStyle}
+              onClick={handleBack}
+            >
+              {`< ${backText}`}
+            </Button>
+            <Button 
+              variant="contained" 
+              sx={buttonSecondaryStyle}
+              onClick={handleDownloadCSV}
+            >
+              Baixar CSV
+            </Button>
+            <Button
+              variant="contained"
+              sx={buttonSecondaryStyle}
+              onClick={handleSendMessage}
+            >
+              Enviar Dados
+            </Button>
+          </Box>
         </Box>
       </Grid>
     </Container>

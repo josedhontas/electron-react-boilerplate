@@ -19,7 +19,7 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 let exeProcess: ChildProcessWithoutNullStreams | null = null;
 
-// Adiciona handler IPC para disponibilizar o CSV para o frontend
+// Caminhos para os arquivos
 const csvFilePath = app.isPackaged
   ? path.join(process.resourcesPath, 'python', 'dados_sensores.csv')
   : path.join(__dirname, '../../python/dados_sensores.csv');
@@ -28,41 +28,62 @@ const jsonFilePath = app.isPackaged
   ? path.join(process.resourcesPath, 'python', 'dados_paciente.json')
   : path.join(__dirname, '../../python/dados_paciente.json');
 
-// Leitura do CSV e JSON de forma assíncrona
+const jsonSensorPath = app.isPackaged
+  ? path.join(process.resourcesPath, 'python', 'dados_sensores.json')
+  : path.join(__dirname, '../../python/dados_sensores.json');
+
+// Handlers IPC
 ipcMain.handle('get-csv-data', async () => {
   try {
     const data = await fs.promises.readFile(csvFilePath, 'utf-8');
     return data;
   } catch (error) {
-    console.error("Erro ao ler o arquivo CSV:", error);
+    console.error('Erro ao ler o arquivo CSV:', error);
     throw error;
   }
 });
 
-ipcMain.handle('get-json-data', async () => {
+ipcMain.handle('get-json-paciente', async () => {
   try {
     const data = await fs.promises.readFile(jsonFilePath, 'utf-8');
     return data;
   } catch (error) {
-    console.error("Erro ao ler o arquivo JSON:", error);
+    console.error('Erro ao ler o arquivo JSON de paciente:', error);
     throw error;
   }
 });
 
-// Watchers para monitorar alterações no CSV e JSON
-const watcherCsv = chokidar.watch(csvFilePath);
-const watcherJson = chokidar.watch(jsonFilePath);
+ipcMain.handle('get-json-sensor', async () => {
+  try {
+    const data = await fs.promises.readFile(jsonSensorPath, 'utf-8');
+    return data;
+  } catch (error) {
+    console.error('Erro ao ler o arquivo JSON de sensores:', error);
+    throw error;
+  }
+});
 
-watcherCsv.on('change', (path) => {
-  console.log(`Arquivo ${path} foi modificado.`);
+// Watchers para monitorar alterações nos arquivos
+const watcherCsv = chokidar.watch(csvFilePath);
+const watcherJsonPaciente = chokidar.watch(jsonFilePath);
+const watcherJsonSensor = chokidar.watch(jsonSensorPath);
+
+watcherCsv.on('change', () => {
+  console.log(`Arquivo CSV (${csvFilePath}) foi modificado.`);
   mainWindow?.webContents.send('csv-updated');
 });
 
-watcherJson.on('change', (path) => {
-  console.log(`Arquivo ${path} foi modificado.`);
-  mainWindow?.webContents.send('json-updated');
+watcherJsonPaciente.on('change', () => {
+  console.log(`Arquivo JSON de paciente (${jsonFilePath}) foi modificado.`);
+  mainWindow?.webContents.send('json-paciente-updated');
 });
 
+watcherJsonSensor.on('change', () => {
+  console.log(`Arquivo JSON de sensores (${jsonSensorPath}) foi modificado.`);
+  mainWindow?.webContents.send('json-sensor-updated');
+});
+
+// Configurações principais do Electron
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -97,9 +118,8 @@ const createWindow = async () => {
     ? path.join(process.resourcesPath, 'assets')
     : path.join(__dirname, '../../assets');
 
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
+  const getAssetPath = (...paths: string[]): string =>
+    path.join(RESOURCES_PATH, ...paths);
 
   mainWindow = new BrowserWindow({
     show: false,
@@ -138,10 +158,8 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  // Atualizações automáticas
   new AppUpdater();
 
-  // Executa o programa .exe dependendo do ambiente
   const exePath = app.isPackaged
     ? path.join(process.resourcesPath, 'python', 'main.exe')
     : path.join(__dirname, '../../python/main.exe');
@@ -161,8 +179,8 @@ const createWindow = async () => {
  */
 app.on('window-all-closed', () => {
   if (exeProcess) {
-    exeProcess.kill();  // Encerra o processo .exe se ainda estiver em execução
-    exeProcess = null;   // Limpa a referência ao processo
+    exeProcess.kill();
+    exeProcess = null;
   }
   if (process.platform !== 'darwin') {
     app.quit();
@@ -171,7 +189,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   if (exeProcess) {
-    exeProcess.kill();  // Garante que o .exe será encerrado antes do app sair
+    exeProcess.kill();
   }
 });
 
