@@ -7,7 +7,7 @@ import {
 import {
   Box, Container, Grid, Typography, Button, Switch
 } from '@mui/material';
-import { containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle } from '../styles/globalStyles';
+import { containerStyle, titleStyle, buttonTertiaryStyle, buttonSecondaryStyle } from '../styles/globalStyles';
 import { useNavigate } from 'react-router-dom';
 
 interface DataPoint {
@@ -84,7 +84,7 @@ const Grafico: React.FC = () => {
     }
   };
 
-  const handleBack = () => navigate("/"); 
+  const handleBack = () => navigate("/inicio"); 
   const backText = "Voltar"; 
 
   return (
@@ -132,7 +132,7 @@ const Grafico: React.FC = () => {
       <Box display="flex" justifyContent="space-between" mt={4}>
         <Button
           variant="contained"
-          sx={buttonPrimaryStyle}
+          sx={buttonTertiaryStyle}
           onClick={handleBack}
         >
           {`< ${backText}`}

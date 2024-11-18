@@ -29,7 +29,7 @@ const Home = () => {
           Aperte iniciar para começar
         </Typography>
       </Box>
-      <ButtonPlay nextRoute="/engolir_seco" />
+      <ButtonPlay nextRoute="/paciente" />
     </Container>
   );
 };

@@ -65,7 +65,7 @@ const Paciente: React.FC = () => {
 
     console.log(dataToSend);
     socket.send(JSON.stringify({ action: 'set-paciente-data', ...dataToSend }));
-    navigate('/inicio');
+    navigate('/engolir_seco');
   };
 
   useEffect(() => {

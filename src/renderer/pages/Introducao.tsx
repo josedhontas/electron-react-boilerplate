@@ -123,7 +123,7 @@ const Introducao = () => {
 
       {/* Botão Iniciar */}
       <Box mt={4} display="flex" justifyContent="center">
-        <ButtonPlay nextRoute="/paciente"/>
+        <ButtonPlay nextRoute="/inicio"/>
       </Box>
     </Container>
   );
