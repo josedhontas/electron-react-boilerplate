@@ -3,9 +3,7 @@ import {
   Container, TextField, Box, Typography, Button, MenuItem, InputAdornment 
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import CommentIcon from '@mui/icons-material/Comment';
 import { useNavigate } from 'react-router-dom';
 import { 
   containerStyle, titleStyle, textStyle, buttonTertiaryStyle, buttonSecondaryStyle 
@@ -27,11 +25,16 @@ const diseasesList: string[] = [
   'Outros',
 ];
 
+// Função para remover acentuação
+const removeAccents = (text: string): string => {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+};
+
 interface PatientData {
   nome: string;
   dataNascimento: string;
   doenca: string;
-  doencaEspecifica?: string; // Campo adicional
+  doencaEspecifica?: string;
   comentarios: string;
 }
 
@@ -58,9 +61,13 @@ const Paciente: React.FC = () => {
     e.preventDefault();
     const dataToSend = {
       ...patientData,
-      doenca: patientData.doenca === 'Outros' && patientData.doencaEspecifica 
-        ? patientData.doencaEspecifica 
-        : patientData.doenca,
+      nome: removeAccents(patientData.nome), // Remove acentuação do nome
+      doenca: removeAccents(
+        patientData.doenca === 'Outros' && patientData.doencaEspecifica 
+          ? patientData.doencaEspecifica 
+          : patientData.doenca
+      ),
+      comentarios: removeAccents(patientData.comentarios), // Remove acentuação dos comentários
     };
 
     console.log(dataToSend);
@@ -136,7 +143,7 @@ const Paciente: React.FC = () => {
           required
         >
           {diseasesList.map((doenca) => (
-            <MenuItem key={doenca} value={doenca}>
+            <MenuItem key={doenca} value={removeAccents(doenca)}>
               {doenca}
             </MenuItem>
           ))}

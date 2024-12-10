@@ -66,7 +66,7 @@ const AppRouter: React.FC = () => {
           element={
             <ActionPage
               key="idssi_4"
-              title="IDDSI 4 – Purê Espesso"
+              title="IDDSI 4 – Pastoso"
               acao="comendo_pure"
               imageUrl={comendo}
               imageAlt="GIF de uma pessoa ingerindo purê espesso"
@@ -85,11 +85,11 @@ const AppRouter: React.FC = () => {
           element={
             <ActionPage
               key="idssi_7"
-              title="IDDSI 7 – Sólido Regular"
+              title="IDDSI 7 – Sólido Normal"
               acao="comendo_solido"
               imageUrl={biscoito}
               imageAlt="GIF de uma pessoa comendo um sólido"
-              initialTimer={12}
+              initialTimer={25}
               backRoute="/idssi_4"
               nextRoute="/grafico"
               backText="Voltar"
