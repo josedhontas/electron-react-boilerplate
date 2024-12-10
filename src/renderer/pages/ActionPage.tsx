@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef, FC } from 'react';
-import { Container, Box, Typography, Button } from '@mui/material';
+import { Container, Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import { 
-  containerStyle, titleStyle, buttonPrimaryStyle, buttonSecondaryStyle, buttonTertiaryStyle 
+import ReplayIcon from '@mui/icons-material/Replay';
+import {
+  containerStyle,
+  titleStyle,
+  buttonPrimaryStyle,
+  buttonSecondaryStyle,
+  buttonTertiaryStyle,
 } from '../styles/globalStyles';
 import '../styles/style.css';
 
-// Definição dos tipos das props
 interface ActionPageProps {
   title: string;
   acao: string;
@@ -41,14 +45,15 @@ const ActionPage: FC<ActionPageProps> = ({
 
   const handleToggle = () => {
     setIsRunning((prev) => !prev);
+    wsRef.current?.send(
+      JSON.stringify({ action: isRunning ? 'stop-recording' : 'start-recording', dataType: acao })
+    );
+  };
 
-    if (!isRunning && wsRef.current) {
-      wsRef.current.send(
-        JSON.stringify({ action: 'start-recording', dataType: acao })
-      );
-    } else if (wsRef.current) {
-      wsRef.current.send(JSON.stringify({ action: 'stop-recording' }));
-    }
+  const handleReset = () => {
+    setTimer(initialTimer);
+    setIsRunning(false);
+    wsRef.current?.send(JSON.stringify({ action: 'delete-last-record' }));
   };
 
   useEffect(() => {
@@ -92,24 +97,9 @@ const ActionPage: FC<ActionPageProps> = ({
   const handleBack = () => navigate(backRoute);
 
   const handleNext = () => {
-    if (nextRoute === '/grafico') {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ action: 'enviar-dados' }));
-      } else {
-        wsRef.current = new WebSocket('ws://localhost:8080');
-        wsRef.current.onopen = () => {
-          console.log('Conexão WebSocket aberta para /grafico');
-          wsRef.current?.send(JSON.stringify({ action: 'enviar-dados' }));
-        };
-        wsRef.current.onclose = () => {
-          console.log('Conexão WebSocket fechada após enviar dados para /grafico');
-        };
-        wsRef.current.onerror = (error) => {
-          console.error('Erro ao conectar ao WebSocket:', error);
-        };
-      }
+    if (nextRoute === '/grafico' && wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'enviar-dados' }));
     }
-
     setIsAnimatingOut(true);
     setTimeout(() => navigate(nextRoute), 300);
   };
@@ -149,19 +139,26 @@ const ActionPage: FC<ActionPageProps> = ({
         </Typography>
       </Box>
 
-      <Box mb={4}>
+      <Box display="flex" justifyContent="center" mb={4}>
         <Button
           variant="contained"
           sx={buttonPrimaryStyle}
           startIcon={isRunning ? <PauseIcon /> : <PlayArrowIcon />}
           onClick={handleToggle}
-          disabled={timer === 0}
         >
           {isRunning ? 'Pausar' : 'Gravar'}
         </Button>
       </Box>
 
-      <Box display="flex" justifyContent="space-between" mt={4}>
+      <Box display="flex" justifyContent="center" mb={4}>
+        <Tooltip title="Reiniciar">
+          <IconButton color="primary" onClick={handleReset} disabled={isRunning}>
+            <ReplayIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Box display="flex" justifyContent="space-between">
         <Button
           variant="contained"
           sx={buttonTertiaryStyle}
