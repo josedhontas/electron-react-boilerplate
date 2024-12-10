@@ -25,6 +25,9 @@ const diseasesList: string[] = [
   'Outros',
 ];
 
+// Lista de gêneros simplificada
+const genderList: string[] = ['Masculino', 'Feminino'];
+
 // Função para remover acentuação
 const removeAccents = (text: string): string => {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -47,6 +50,8 @@ const Paciente: React.FC = () => {
     comentarios: '',
   });
 
+  const [genero, setGenero] = useState<string>('Masculino'); // Armazena o gênero, mas não o envia
+
   const socket = new WebSocket('ws://localhost:8080');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -57,17 +62,21 @@ const Paciente: React.FC = () => {
     }));
   };
 
+  const handleGeneroChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setGenero(e.target.value);
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const dataToSend = {
       ...patientData,
-      nome: removeAccents(patientData.nome), // Remove acentuação do nome
+      nome: removeAccents(patientData.nome),
       doenca: removeAccents(
         patientData.doenca === 'Outros' && patientData.doencaEspecifica 
           ? patientData.doencaEspecifica 
           : patientData.doenca
       ),
-      comentarios: removeAccents(patientData.comentarios), // Remove acentuação dos comentários
+      comentarios: removeAccents(patientData.comentarios),
     };
 
     console.log(dataToSend);
@@ -123,6 +132,22 @@ const Paciente: React.FC = () => {
           type="date"
           required
         />
+
+        <TextField
+          fullWidth
+          select
+          label="Gênero"
+          value={genero}
+          onChange={handleGeneroChange}
+          margin="normal"
+          sx={textStyle}
+        >
+          {genderList.map((generoOption) => (
+            <MenuItem key={generoOption} value={generoOption}>
+              {generoOption}
+            </MenuItem>
+          ))}
+        </TextField>
 
         <TextField
           fullWidth
